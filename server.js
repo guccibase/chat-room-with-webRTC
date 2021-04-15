@@ -1,8 +1,9 @@
-const { static } = require('express');
-const express = require('express');
-const app = express();
-const server = require('http').Server(app);
-const io = require('socket.io')(server);
+var express = require('express')
+    , http = require('http');
+//make sure you keep this order
+var app = express();
+var server = http.createServer(app);
+var io = require('socket.io')(server);
 const {v4:uuidV4} = require('uuid');
 
 
@@ -14,8 +15,20 @@ app.get('/', (req, res)=>{
     res.redirect(`/${uuidV4()}`);
 })
 
-app.get('/:rooms', (req, res)=>{
-    res.render('room', {roomId:req.params.room})
+app.get('/:room', (req, res)=>{
+  //  console.log(req.params.room);
+    res.render('room', {roomId: req.params.room})
+})
+
+io.on('connection', socket => {
+
+    socket.on('join-room', (roomId, userId) => {
+        socket.join(roomId);
+    socket.to(roomId).broadcast.emit('user-connected', userId)
+    socket.to(roomId).broadcast.emit('user-disconnected', userId);
+
+    })
+
 })
 
 
@@ -25,6 +38,4 @@ app.get('/:rooms', (req, res)=>{
 
 
 
-
-
-app.listen(3000);
+server.listen(3000);
